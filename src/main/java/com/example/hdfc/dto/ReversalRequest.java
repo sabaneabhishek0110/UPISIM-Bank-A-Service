@@ -11,9 +11,8 @@ import java.math.BigDecimal;
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class BalanceResponse {
-    private BigDecimal balance;
-    private String status;
-    private String failureReason;
-    private String responseCode;
+public class ReversalRequest {
+    private String upiTxnId;
+    private String payerVpa;
+    private BigDecimal amount;
 }

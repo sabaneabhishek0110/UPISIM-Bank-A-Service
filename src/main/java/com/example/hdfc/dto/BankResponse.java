@@ -5,15 +5,12 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.math.BigDecimal;
-
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
-public class BalanceResponse {
-    private BigDecimal balance;
+public class BankResponse {
+    private String bankTxnId;
     private String status;
-    private String failureReason;
-    private String responseCode;
+    private String message;
 }

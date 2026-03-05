@@ -5,15 +5,17 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.math.BigDecimal;
+
 @Getter
 @Setter
 @NoArgsConstructor
 @AllArgsConstructor
 public class CreditRequest {
     private String PayeeVpa;
-    private Double amount;
-    private String upi_txn_id;
+    private BigDecimal amount;
+    private String upiTxnId;
     private String rrn;
-    private String psp_txn_id;
+    private String pspTxnId;
 
 }
