@@ -60,10 +60,24 @@ public class JwtAuthFilter extends OncePerRequestFilter {
                 StandardCharsets.UTF_8
         );
 
-        String public_key = hdfcService.loadPublicKeyFromdb(npciId);
-        PublicKey publicKey = hdfcService.convertToPublicKey(public_key);
-        boolean valid = hdfcService.verify(payload,base64Signature,publicKey);
+        String public_key;
+        try {
+            public_key = hdfcService.loadPublicKeyFromdb(npciId);
+        } catch (Exception e) {
+            System.out.println("NPCI ID not registered in HDFC: " + npciId);
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
 
+        boolean valid;
+        try {
+            PublicKey publicKey = hdfcService.convertToPublicKey(public_key);
+            valid = hdfcService.verify(payload, base64Signature, publicKey);
+        } catch (Exception e) {
+            System.out.println("Signature verification error: " + e.getMessage());
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            return;
+        }
 
         System.out.println("Valid : "+valid);
 

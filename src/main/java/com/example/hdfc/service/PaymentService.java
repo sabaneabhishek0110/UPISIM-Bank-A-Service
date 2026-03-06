@@ -24,6 +24,7 @@ public class PaymentService {
     private final PasswordEncoder passwordEncoder;
 
 
+    //This are the for old version
     public DebitResponse debit(String vpa,BigDecimal amount,String pin,String rrn,String upi_txn_id,String psp_txn_id) {
         Optional<hdfc_accounts> account = accountsRepository.findByVpa(vpa);
         DebitResponse response;
@@ -123,6 +124,7 @@ public class PaymentService {
         return response;
     }
 
+    //This are the for old version
     public CreditResponse credit(String vpa, BigDecimal amount, String rrn, String upi_txn_id,String psp_txn_id) {
         System.out.println("vpa : "+vpa);
         Optional<hdfc_accounts> account = accountsRepository.findByVpa(vpa);
@@ -199,18 +201,30 @@ public class PaymentService {
         }
 
         // 2 : Fetch account
-        hdfc_accounts account = accountsRepository.findByVpa(
+        Optional<hdfc_accounts> accountOpt = accountsRepository.findByVpa(
                 request.getPayerVpa()
-        ).orElseThrow(() ->
-                new RuntimeException("Account not found")
         );
+
+        if (accountOpt.isEmpty()) {
+            return new BankResponse(
+                    null,
+                    "FAILED",
+                    "Account not found"
+            );
+        }
+
+        hdfc_accounts account = accountOpt.get();
 
         // 3 : PIN VALIDATION
         if (!passwordEncoder.matches(request.getPin(), account.getUpiPinHash())) {
 
             hdfc_transactions failedTxn = new hdfc_transactions();
+            failedTxn.setAccountId(account);
             failedTxn.setUpiTxnId(request.getUpiTxnId());
             failedTxn.setPayerVpa(request.getPayerVpa());
+            failedTxn.setPayeeVpa(request.getPayeeVpa());
+            failedTxn.setPspTxnId(request.getPspTxnId());
+            failedTxn.setRrn(request.getRrn());
             failedTxn.setAmount(request.getAmount());
             failedTxn.setTransactionType(hdfc_transactions.TransactionType.DEBIT);
             failedTxn.setStatus(hdfc_transactions.TransactionStatus.FAILED);
@@ -230,8 +244,12 @@ public class PaymentService {
         if (balance.compareTo(amount) < 0) {
 
             hdfc_transactions failedTxn = new hdfc_transactions();
+            failedTxn.setAccountId(account);
             failedTxn.setUpiTxnId(request.getUpiTxnId());
             failedTxn.setPayerVpa(request.getPayerVpa());
+            failedTxn.setPayeeVpa(request.getPayeeVpa());
+            failedTxn.setPspTxnId(request.getPspTxnId());
+            failedTxn.setRrn(request.getRrn());
             failedTxn.setAmount(request.getAmount());
             failedTxn.setTransactionType(hdfc_transactions.TransactionType.DEBIT);
             failedTxn.setStatus(hdfc_transactions.TransactionStatus.FAILED);
@@ -253,8 +271,12 @@ public class PaymentService {
 
         // 6 : Save success transaction
         hdfc_transactions successTxn = new hdfc_transactions();
+        successTxn.setAccountId(account);
         successTxn.setUpiTxnId(request.getUpiTxnId());
         successTxn.setPayerVpa(request.getPayerVpa());
+        successTxn.setPayeeVpa(request.getPayeeVpa());
+        successTxn.setPspTxnId(request.getPspTxnId());
+        successTxn.setRrn(request.getRrn());
         successTxn.setAmount(request.getAmount());
         successTxn.setTransactionType(hdfc_transactions.TransactionType.DEBIT);
         successTxn.setStatus(hdfc_transactions.TransactionStatus.SUCCESS);
@@ -284,11 +306,19 @@ public class PaymentService {
         }
 
         // 2 : Fetch account
-        hdfc_accounts account = accountsRepository.findByVpa(
+        Optional<hdfc_accounts> accountOpt = accountsRepository.findByVpa(
                 request.getPayeeVpa()
-        ).orElseThrow(() ->
-                new RuntimeException("Account not found")
         );
+
+        if (accountOpt.isEmpty()) {
+            return new BankResponse(
+                    null,
+                    "FAILED",
+                    "Account not found"
+            );
+        }
+
+        hdfc_accounts account = accountOpt.get();
 
         BigDecimal balance = account.getBalance();
         BigDecimal amount = request.getAmount();
@@ -301,8 +331,12 @@ public class PaymentService {
 
         // 4 : Save success transaction
         hdfc_transactions successTxn = new hdfc_transactions();
+        successTxn.setAccountId(account);
         successTxn.setUpiTxnId(request.getUpiTxnId());
-        successTxn.setPayerVpa(request.getPayeeVpa());
+        successTxn.setPayerVpa(request.getPayerVpa());
+        successTxn.setPayeeVpa(request.getPayeeVpa());
+        successTxn.setPspTxnId(request.getPspTxnId());
+        successTxn.setRrn(request.getRrn());
         successTxn.setAmount(request.getAmount());
         successTxn.setTransactionType(hdfc_transactions.TransactionType.CREDIT);
         successTxn.setStatus(hdfc_transactions.TransactionStatus.SUCCESS);
@@ -361,11 +395,19 @@ public class PaymentService {
         }
 
         // 4 : Fetch account
-        hdfc_accounts account = accountsRepository.findByVpa(
+        Optional<hdfc_accounts> reversalAccountOpt = accountsRepository.findByVpa(
                 request.getPayerVpa()
-        ).orElseThrow(() ->
-                new RuntimeException("Account not found")
         );
+
+        if (reversalAccountOpt.isEmpty()) {
+            return new BankResponse(
+                    originalTxn.getId().toString(),
+                    "FAILED",
+                    "Account not found for reversal"
+            );
+        }
+
+        hdfc_accounts account = reversalAccountOpt.get();
 
         // 5 : Add money back
         account.setBalance(
@@ -375,8 +417,12 @@ public class PaymentService {
 
         // 6 : Save reversal transaction
         hdfc_transactions reversalTxn = new hdfc_transactions();
+        reversalTxn.setAccountId(account);
         reversalTxn.setUpiTxnId(request.getUpiTxnId());
         reversalTxn.setPayerVpa(request.getPayerVpa());
+        reversalTxn.setPayeeVpa(request.getPayeeVpa());
+        reversalTxn.setPspTxnId(request.getPspTxnId());
+        reversalTxn.setRrn(request.getRrn());
         reversalTxn.setAmount(request.getAmount());
         reversalTxn.setTransactionType(hdfc_transactions.TransactionType.REVERSED);
         reversalTxn.setStatus(hdfc_transactions.TransactionStatus.REVERSED);
@@ -412,7 +458,7 @@ public class PaymentService {
 
     public boolean authenticateUser(String vpa,String pin){
         hdfc_accounts account = accountsRepository.findByVpa(vpa).get();
-        if(account != null && account.getUpiPinHash().equals(pin)){
+        if(account != null && passwordEncoder.matches(pin, account.getUpiPinHash())){
             return true;
         }
         return false;

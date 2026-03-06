@@ -14,7 +14,7 @@ import java.math.BigDecimal;
 @RequestMapping("/api/bank")
 @RequiredArgsConstructor
 public class PaymentController {
-    private PaymentService paymentService;
+    private final PaymentService paymentService;
 
 
 //    @PostMapping("/debit")

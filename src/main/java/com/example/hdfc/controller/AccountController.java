@@ -37,6 +37,7 @@ public class AccountController {
     @PostMapping("/balance")
     public ResponseEntity<BalanceResponse> checkBalance(@RequestBody BalanceRequest balanceRequest) {
         try{
+            System.out.println("Balance check processing....");
             String vpa = balanceRequest.getVpa();
             String pin = balanceRequest.getPin();
             boolean valid = paymentService.authenticateUser(vpa, pin);
@@ -53,10 +54,12 @@ public class AccountController {
             response.setStatus("success");
             response.setResponseCode("U00");
             response.setFailureReason(null);
+            System.out.println("Balance  : "+balance);
 
             return ResponseEntity.ok(response);
         }
         catch(Exception e){
+            System.out.println("Error for checking the balance : "+e.getMessage());
             return ResponseEntity.internalServerError().body(new BalanceResponse());
         }
     }

@@ -13,7 +13,6 @@ import java.math.BigDecimal;
 import java.util.Optional;
 
 public interface AccountsRepository extends JpaRepository<hdfc_accounts, String> {
-    @Lock(LockModeType.PESSIMISTIC_WRITE)
     Optional<hdfc_accounts> findByVpa(@Param("vpa") String vpa);
 
     @Modifying
